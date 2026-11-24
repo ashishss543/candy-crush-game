@@ -1,0 +1,52 @@
+{
+  "sound": true,
+  "formulas": [],
+  "rules": [],
+  "cleared": {},
+  "history": [
+    {
+      "PlayerID": "Player1",
+      "SessionID": "SESS_BAB6CE",
+      "Mode": "PLAYER_VS_AI",
+      "Level": 1,
+      "PlayerScore": 1710,
+      "AIScore": 600,
+      "ValidSwaps": 2,
+      "InvalidSwaps": 0,
+      "SwapAccuracy": "100%",
+      "Matches": 7,
+      "Match2": 1,
+      "Match3": 6,
+      "Match4": 0,
+      "Match5": 0,
+      "Combo": "5x",
+      "AIMoves": 2,
+      "HintsUsed": 0,
+      "Target": 1300,
+      "Status": "IN_PROGRESS",
+      "StartedAt": "2026-11-24T09:20:24.803591500Z"
+    },
+    {
+      "PlayerID": "Player1",
+      "SessionID": "SESS_6EF995",
+      "Mode": "PLAYER_ONLY",
+      "Level": 1,
+      "PlayerScore": 150,
+      "AIScore": 0,
+      "ValidSwaps": 2,
+      "InvalidSwaps": 0,
+      "SwapAccuracy": "100%",
+      "Matches": 2,
+      "Match2": 1,
+      "Match3": 1,
+      "Match4": 0,
+      "Match5": 0,
+      "Combo": "1x",
+      "AIMoves": 0,
+      "HintsUsed": 0,
+      "Target": 1300,
+      "Status": "IN_PROGRESS",
+      "StartedAt": "2026-11-24T09:19:34.606777200Z"
+    }
+  ]
+}

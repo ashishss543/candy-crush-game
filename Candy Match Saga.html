@@ -1,0 +1,1180 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Candy Match Saga</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: three-column arcade console (Research Book | board | AI scoreboard) that stacks on phones. Single neon-night look by choice. */
+:root{
+  --bg:#150c27; --bg2:#26114a; --panel:#1a1230; --panel2:#120b24; --line:#3b2a66;
+  --ink:#f5f0ff; --mute:#b9a9e6; --gold:#ffd21f; --green:#3cb371; --green2:#2e9a5f;
+  --cyan:#00e5ff; --pink:#ff5fa2; --lime:#9dff7a; --orange:#ff9d1c; --violet:#8a2be2; --danger:#ff5468;
+  --font:'Fredoka',ui-rounded,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:auto}
+body{margin:0;background:radial-gradient(1200px 700px at 50% -10%,var(--bg2),var(--bg) 70%) fixed,var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;
+  padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-height:100vh}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.hidden,[hidden]{display:none!important}
+.gold{color:var(--gold)}
+
+/* ---------- setup screen ---------- */
+#setup{display:flex;justify-content:center;padding-block:18px}
+.setup-card{width:min(440px,100%);background:linear-gradient(180deg,#1b1333,#130c26);border:1px solid #433069;border-radius:28px;padding:30px 28px 28px;box-shadow:0 30px 80px #0009}
+.logo{display:block;margin:0 auto 4px;width:76px;height:76px;filter:drop-shadow(0 0 14px #ff4d6d88)}
+.setup-card h1{margin:0;text-align:center;color:var(--gold);font-size:2.4rem;font-weight:700;letter-spacing:.5px;text-shadow:0 3px 0 #b8560a,0 0 24px #ffb30055;text-wrap:balance}
+.tag{text-align:center;color:#c9b6ff;font-style:italic;font-size:.82rem;margin:6px 0 20px}
+.setup-card label.cap{display:block;font-weight:600;margin:14px 0 8px;font-size:.92rem}
+.setup-card input[type=text]{width:100%;padding:13px 16px;border-radius:14px;background:#0f0a1f;border:2px solid var(--violet);font-size:1.02rem}
+.radio{display:flex;gap:10px;align-items:center;padding:13px 14px;border-radius:14px;background:#1f1640;border:1px solid var(--line);margin-bottom:12px;font-weight:600;cursor:pointer}
+.radio:has(input:checked){border-color:var(--cyan);background:#1a1e45}
+.btn{display:block;width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);background:#32264f;font-weight:700;letter-spacing:.3px;margin-top:12px;text-align:center}
+.btn:hover{filter:brightness(1.12)}
+.btn.go{background:linear-gradient(90deg,var(--green2),#3fbf79);border-color:#3fbf7955}
+.btn.warn{background:linear-gradient(90deg,#ff8c00,#ffd000);color:#2b1700;border:0}
+.btn.ghost{background:transparent;border:0;display:inline-block;width:auto;padding:10px 14px;font-size:1.05rem}
+.howto{margin-top:18px;border-top:1px dashed var(--line);padding-top:12px;color:var(--mute);font-size:.84rem}
+.howto summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.howto ul{margin:8px 0 0;padding-left:18px;line-height:1.55}
+
+/* ---------- game screen ---------- */
+#game{max-width:1260px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.hud{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px}
+.hud .who{font-weight:700;display:flex;gap:6px;align-items:center;margin-right:4px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px 12px;text-align:center;min-width:64px}
+.stat small{display:block;font-size:.62rem;color:var(--mute);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.stat b{font-size:1.05rem;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat.score b{color:var(--lime)}
+.spacer{flex:1}
+.pill{border:0;border-radius:999px;padding:7px 14px;font-weight:700;font-size:.8rem;color:#fff}
+.pill.p1{background:#8a2be2}.pill.p2{background:#7b3fe4}.pill.p3{background:#ffbf00;color:#2b1d00}.pill.p4{background:#17b9a6}.pill.p5{background:#17a99d}
+.sq{width:38px;height:36px;border-radius:10px;border:1px solid var(--line);background:#2a2142}
+.pill:hover,.sq:hover{filter:brightness(1.15)}
+#banner{border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:1.25rem;border:2px solid #7dffb0;background:linear-gradient(90deg,#2e8f57,#3cb371);box-shadow:0 0 22px #3cb37144}
+#banner.ai{background:linear-gradient(90deg,#8a4b00,#c97a0a);border-color:#ffc766;box-shadow:0 0 22px #ffa50044}
+#banner.over{background:linear-gradient(90deg,#4a2b8a,#6a3fc4);border-color:#b79cff;box-shadow:none}
+#subbar{border:1px solid #6e5b0f;background:#241c09;color:var(--gold);border-radius:12px;padding:8px 12px;text-align:center;font-size:.86rem}
+.cols{display:grid;grid-template-columns:minmax(210px,250px) minmax(0,1fr) minmax(220px,260px);gap:12px;align-items:start}
+.side{padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.side h3{margin:0;text-align:center;color:var(--gold);font-size:.86rem;letter-spacing:.6px;text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.side h4{margin:6px 0 0;text-align:center;color:var(--gold);font-size:.78rem;letter-spacing:.5px;text-transform:uppercase}
+
+/* board */
+.boardwrap{padding:12px;display:flex;justify-content:center}
+#board{width:min(100%,640px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);background:#100a20;border-radius:14px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+.cell{background:#1b1230;display:flex;align-items:center;justify-content:center;padding:6%;position:relative;min-width:0;min-height:0}
+.cell.alt{background:#150e27}
+.candy{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,4.2vw,30px);line-height:1;background:radial-gradient(circle at 34% 28%,color-mix(in srgb,var(--cc) 70%,#fff),var(--cc) 62%);border:2px solid rgba(255,255,255,.35);box-shadow:inset 0 -4px 8px #0003,0 2px 6px #0005;position:relative;overflow:hidden;transition:transform .12s}
+.cell:hover .candy{transform:scale(1.06)}
+.candy.s-h::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffffaa 0 3px,transparent 3px 9px);mix-blend-mode:overlay}
+.candy.s-v::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#ffffffaa 0 3px,transparent 3px 9px);mix-blend-mode:overlay}
+.candy.bomb{background:conic-gradient(#ff3b6b,#ffb000,#f3ff3b,#3bff7a,#3bc8ff,#8a3bff,#ff3b6b);border-color:#fff}
+.cell.sel .candy{transform:scale(1.14);box-shadow:0 0 0 3px #fff,0 0 18px #fff9}
+.cell.hint .candy{animation:hint .7s ease-in-out infinite alternate}
+@keyframes hint{from{box-shadow:0 0 0 2px var(--gold),0 0 6px var(--gold)}to{box-shadow:0 0 0 4px var(--gold),0 0 24px var(--gold);transform:scale(1.1)}}
+.candy.pop{animation:pop .26s ease-in forwards}
+@keyframes pop{0%{transform:scale(1);opacity:1}60%{transform:scale(1.25);opacity:1;filter:brightness(1.8)}100%{transform:scale(0);opacity:0}}
+.candy.fall{animation:fall .3s cubic-bezier(.3,.8,.4,1)}
+@keyframes fall{from{transform:translateY(calc(var(--f)*-105%))}to{transform:none}}
+.candy.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.candy.born{animation:born .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes born{from{transform:scale(0)}to{transform:scale(1)}}
+.floaty{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);pointer-events:none;font-weight:700;font-size:clamp(22px,5vw,38px);color:var(--gold);text-shadow:0 3px 0 #7a3c00,0 0 20px #ffa600;animation:floaty 1s ease-out forwards;z-index:5;white-space:nowrap}
+@keyframes floaty{from{opacity:1;transform:translate(-50%,-30%) scale(.8)}to{opacity:0;transform:translate(-50%,-140%) scale(1.15)}}
+.foot{text-align:center;color:var(--mute);font-size:.78rem;padding:2px}
+
+/* research book */
+.search{width:100%;padding:9px 12px;border-radius:10px;background:#0f0a1f;border:1px solid var(--violet);font-size:.84rem}
+.tabs{display:flex;gap:8px}
+.tab{flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:#2a2142;color:var(--mute);font-weight:600;font-size:.82rem}
+.tab.on{background:var(--violet);color:#fff;border-color:var(--violet)}
+.book{max-height:230px;overflow:auto;padding-right:4px;scrollbar-width:thin}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ccard{background:#120b24;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:.72rem;line-height:1.15}
+.ccard .ic{font-size:1.4rem;display:block}
+.ccard em{display:block;color:var(--gold);font-style:normal;font-size:.7rem}
+.ccard.on,.entry.on{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan)}
+.entry{background:#120b24;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:.78rem;line-height:1.4;width:100%;text-align:left}
+.entry b{color:var(--gold)}
+.entry .k{display:block;color:var(--mute);font-size:.68rem;text-transform:uppercase;letter-spacing:.6px}
+.eval h5{margin:0 0 4px;font-size:1.02rem}
+.eval p{margin:0;font-size:.9rem;line-height:1.4}
+.verdict{border-radius:10px;padding:8px 10px;margin-top:6px;font-size:.82rem;line-height:1.45}
+.verdict.ok{background:#0f2a1a;border:1px solid #2e8f57;color:#bfffd5}
+.verdict.no{background:#2e1018;border:1px solid #b23a52;color:#ffc2cd}
+.verdict b{display:block;font-size:.95rem;margin-bottom:2px}
+
+/* right column */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center;font-size:.76rem;color:var(--mute)}
+.score b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.score.p b{color:var(--lime)}.score.a b{color:var(--orange)}
+#log{background:#0d0819;border-radius:10px;height:92px;overflow:auto;font-size:.76rem;padding:6px 8px;line-height:1.35;scrollbar-width:thin}
+#log div{padding:3px 0;border-bottom:1px solid #261a44}
+.kv{background:var(--panel2);border:1px solid #1c4a56;border-radius:10px;padding:8px 10px;font-size:.74rem;display:grid;gap:5px}
+.kv div{display:flex;justify-content:space-between;gap:8px}
+.kv span:first-child{color:var(--mute)}
+.kv b{text-align:right}
+.cy{color:var(--cyan)}.yl{color:var(--gold)}.lm{color:var(--lime)}.pk{color:var(--pink)}.pu{color:#b983ff}.bl{color:#7ec3ff}.gr{color:#7dff9b}
+.mc{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.76rem;display:grid;gap:5px}
+.mc div{display:flex;justify-content:space-between}
+
+/* modal */
+#ov{position:fixed;inset:0;background:#05020ccc;backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 14px 20px;overflow:auto;z-index:50}
+.modal{width:min(860px,100%);background:linear-gradient(180deg,#1c1336,#130c26);border:1px solid #433069;border-radius:22px;padding:22px 24px;margin-block:auto;box-shadow:0 30px 90px #000a}
+.modal.narrow{width:min(520px,100%)}
+.mh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.mh h2{margin:0;color:var(--gold);font-size:1.12rem;text-wrap:balance}
+.x{background:none;border:0;font-size:1.4rem;line-height:1;padding:4px 8px;color:#fff}
+.f{margin-bottom:12px}
+.f>label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+.f input,.f select{width:100%;padding:11px 14px;border-radius:12px;background:#0d0819;border:1px solid var(--violet)}
+.f select option{background:#150e27}
+.ing{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ing select{flex:1 1 150px;min-width:0}
+.ing .plus{color:var(--gold);font-weight:700}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.actions .btn{width:auto;margin:0;padding:12px 22px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.tile small{display:block;font-size:.68rem;color:#b794ff;font-weight:700;margin-bottom:4px}
+.tile b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+.dash2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.box h3{margin:0 0 10px;font-size:.88rem;color:var(--gold)}
+.bar{display:grid;grid-template-columns:130px 1fr 34px;gap:8px;align-items:center;font-size:.78rem;margin-bottom:7px}
+.bar i{display:block;height:14px;border-radius:8px;background:#201838;overflow:hidden}
+.bar i u{display:block;height:100%;background:linear-gradient(90deg,#ff5fa2,#8a2be2);border-radius:8px;transition:width .4s}
+.meter{height:20px;border-radius:12px;background:#201838;overflow:hidden;margin:6px 0 10px}
+.meter u{display:block;height:100%;background:linear-gradient(90deg,#2e9a5f,#00e5ff);transition:width .4s}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.78rem;white-space:nowrap}
+th{color:var(--gold);background:#251a47;text-align:center;padding:8px 10px;font-weight:600}
+td{text-align:center;padding:8px 10px;border-top:1px solid #2a1e4a}
+.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.lv{background:#251b43;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center;font-weight:700}
+.lv small{display:block;font-weight:400;color:var(--mute);font-size:.66rem;margin-top:2px}
+.lv.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.lv .st{display:block;font-size:.7rem;min-height:1em;color:var(--gold)}
+textarea.out{width:100%;height:210px;background:#0d0819;color:#cfe;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.big{font-size:3rem;text-align:center;margin:0}
+.res{text-align:center}
+.res h2{font-size:1.6rem;margin:6px 0}
+.res p{color:var(--mute);margin:4px 0}
+.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#2b1d55;border:1px solid var(--violet);padding:10px 18px;border-radius:999px;z-index:80;font-weight:600;max-width:90vw;text-align:center}
+
+@media (max-width:980px){
+  .cols{grid-template-columns:1fr}
+  #board-col{order:-1}
+  .book{max-height:260px}
+  .dash2{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .setup-card{padding:24px 18px}.setup-card h1{font-size:1.9rem}
+  .bar{grid-template-columns:100px 1fr 28px}
+  .modal{padding:18px 14px}
+  .boardwrap{padding:6px}
+  .stat{min-width:56px;padding:4px 8px}
+  .hud{padding:8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<!-- ===================== SETUP ===================== -->
+<main id="setup">
+  <div class="setup-card">
+    <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
+      <path d="M12 26l14 10-4 16-12-6z" fill="#e8334a"/><path d="M68 54L54 44l4-16 12 6z" fill="#e8334a"/>
+      <circle cx="40" cy="40" r="22" fill="#ffc83d"/>
+      <path d="M22 30c10-4 26 4 36 0M20 40c12-4 28 6 40 0M22 50c10-4 24 4 36 0" stroke="#e8334a" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="33" cy="30" r="5" fill="#fff" opacity=".4"/>
+    </svg>
+    <h1>CANDY MATCH SAGA</h1>
+    <div class="tag">An Intelligent Rule-Based Candy Match Game with Player Analytics</div>
+    <label class="cap" for="pname">👤 Player Name:</label>
+    <input id="pname" type="text" maxlength="20" value="Player1" autocomplete="off">
+    <label class="cap">🎮 Select Game Mode:</label>
+    <label class="radio"><input type="radio" name="mode" value="PLAYER_ONLY" checked> 👤 Player Only (Normal Mode)</label>
+    <label class="radio"><input type="radio" name="mode" value="PLAYER_VS_AI"> 🤖 Player vs AI Opponent (Turn-Based &amp; Learning)</label>
+    <button class="btn go" id="startBtn">🎮 START PLAYING</button>
+    <button class="btn" id="lvBtn">📋 SELECT LEVEL (1-20)</button>
+    <button class="btn" id="sndBtn">🔊 SOUND: ON</button>
+    <details class="howto">
+      <summary>How to play</summary>
+      <ul>
+        <li>Drag a candy onto a neighbour, or click one candy then a neighbour, to swap them.</li>
+        <li>A swap is valid when it makes a match of 2 or more. Invalid swaps bounce back and cost no move.</li>
+        <li>Match 2 is a pair combo, Match 3 is standard, Match 4 makes a Striped Candy (clears a line), Match 5 makes a Color Bomb (swap it with any candy to wipe that colour).</li>
+        <li>Chain cascades to raise your combo multiplier, up to 5x.</li>
+        <li>Open <b>+ Candy Synthesis</b> to define formulas. Line up the ingredients next to each other to craft a new candy.</li>
+        <li>Open <b>+ Rule</b> to add bonus rules. The AI Worth Check accepts or rejects anything that would break the balance.</li>
+        <li>Reach the target score before the moves run out.</li>
+      </ul>
+    </details>
+  </div>
+</main>
+
+<!-- ===================== GAME ===================== -->
+<main id="game" hidden>
+  <div class="panel hud">
+    <div class="who">👤 <span id="hName">Player1</span></div>
+    <div class="stat"><small>Level</small><b id="hLevel">1</b></div>
+    <div class="stat score"><small>Player Score</small><b id="hScore">0</b></div>
+    <div class="stat"><small>Target</small><b id="hTarget">1300</b></div>
+    <div class="stat"><small>Moves</small><b id="hMoves">24</b></div>
+    <div class="stat"><small>Matches</small><b id="hMatches">0</b></div>
+    <div class="spacer"></div>
+    <button class="pill p1" id="bSynth">+ Candy Synthesis</button>
+    <button class="pill p2" id="bRule">➕ Rule</button>
+    <button class="pill p3" id="bBI">📊 Power BI</button>
+    <button class="pill p4" id="bCsv">📤 CSV</button>
+    <button class="pill p5" id="bJson">📄 JSON</button>
+    <button class="sq" id="bRestart" title="Restart level" aria-label="Restart level">🔄</button>
+    <button class="sq" id="bHome" title="Main menu" aria-label="Main menu">🏠</button>
+  </div>
+  <div id="banner">👤 YOUR TURN</div>
+  <div id="subbar">Click '💡 Ask AI for Hint' for valid move assistance!</div>
+
+  <div class="cols">
+    <!-- Research book -->
+    <aside class="panel side">
+      <h3>📖 Research Book 🔬</h3>
+      <input class="search" id="search" placeholder="🔍 Search candies & rules..." aria-label="Search candies and rules">
+      <div class="tabs"><button class="tab on" id="tabC">Candies</button><button class="tab" id="tabK">Combinations</button></div>
+      <div class="book" id="book"></div>
+      <div class="eval" id="evalBox"><h5>Candy &amp; Rule AI Evaluator</h5><p>Click any candy above to run the AI Worth &amp; Accept/Reject Check!</p></div>
+      <button class="btn warn" id="bWorth" style="margin:0;font-size:.82rem">🔬 Run AI Worth Check (Accept / Reject)</button>
+    </aside>
+
+    <!-- Board -->
+    <section class="panel boardwrap" id="board-col"><div id="board" aria-label="Candy board"></div></section>
+
+    <!-- AI side -->
+    <aside class="panel side">
+      <h3>🤖 AI Opponent &amp; Scoreboard</h3>
+      <div class="two">
+        <div class="score p">👤 Player<b id="sP">0</b></div>
+        <div class="score a">🤖 AI Opponent<b id="sA">0</b></div>
+      </div>
+      <div id="log" aria-live="polite"></div>
+      <button class="btn go" id="bHint" style="margin:0">💡 Ask AI for Hint</button>
+      <h4>🧠 AI Learning &amp; Strategy Engine</h4>
+      <div class="kv">
+        <div><span>Learned Strategy:</span><b class="cy" id="aStrat">Observing Player...</b></div>
+        <div><span>Player Fav Candy Target:</span><b class="yl" id="aFav">None</b></div>
+        <div><span>AI Adaptation Level:</span><b class="lm" id="aLvl">Level 1 (0 Swaps Learned)</b></div>
+      </div>
+      <h4>🎯 Match Counter Breakdown</h4>
+      <div class="mc">
+        <div><span>Total Matches Made:</span><b class="yl" id="mT">0</b></div>
+        <div><span>Match 2 (Pair Combo):</span><b class="pk" id="m2">0</b></div>
+        <div><span>Match 3 (Standard):</span><b class="bl" id="m3">0</b></div>
+        <div><span>Match 4 (Striped Candy):</span><b class="pu" id="m4">0</b></div>
+        <div><span>Match 5 (Color Bomb):</span><b class="gr" id="m5">0</b></div>
+      </div>
+    </aside>
+  </div>
+  <div class="foot">⚡ Power BI Compatible CSV &amp; JSON Telemetry Ready</div>
+</main>
+
+<div id="ov" hidden></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CANDY MATCH SAGA : CANDY AI LAB
+   Module 1  Game setup & level management
+   Module 2  Candy board & match processing (Match 2/3/4/5)
+   Module 3  Candy synthesis & rule management + AI Worth Check
+   Module 4  AI opponent & adaptive strategy engine
+   Module 5  Player analytics & data export (CSV / JSON)
+   ===================================================================== */
+const R = 8, C = 8;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = n => Math.floor(Math.random() * n);
+
+/* ---------- safe storage (Exception handling) ---------- */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('cms1_' + k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('cms1_' + k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- Candy registry (Collections) ---------- */
+const BASE = ['red','blue','green','yellow','purple','orange'];
+const CANDY = {
+  red:    {id:'red',    name:'Red Berry',     icon:'🍓', color:'#e8334a', pts:30, base:true},
+  blue:   {id:'blue',   name:'Blueberry Blue',icon:'🫐', color:'#2f80ed', pts:30, base:true},
+  green:  {id:'green',  name:'Apple Green',   icon:'🍏', color:'#35b84b', pts:30, base:true},
+  yellow: {id:'yellow', name:'Lemon Yellow',  icon:'🍋', color:'#f5c518', pts:30, base:true},
+  purple: {id:'purple', name:'Grape Purple',  icon:'🍇', color:'#9b3fe0', pts:30, base:true},
+  orange: {id:'orange', name:'Orange Citrus', icon:'🍊', color:'#f58a1f', pts:30, base:true},
+  bomb:   {id:'bomb',   name:'Color Bomb',    icon:'🌈', color:'#ffffff', pts:50, base:true, hidden:true}
+};
+const SYN_COLORS = ['#d6336c','#7a3cff','#e0a800','#0fb5a0','#ff6b3d','#3d8bff','#b5179e','#2bb673','#c9184a','#5f6fff'];
+const ICONS = [['🔻','Ruby Gem'],['🔮','Crystal Orb'],['⭐','Star'],['💎','Diamond'],['🌟','Glow Star'],['✨','Sparkles'],['🍭','Lollipop'],['🍬','Wrapped Sweet'],['🍫','Chocolate'],['🧁','Cupcake'],['🍩','Donut'],['🍪','Cookie'],['🎂','Cake'],['🍰','Cake Slice'],['🍦','Ice Cream'],['🍧','Shaved Ice'],['💖','Pink Heart'],['💜','Purple Heart'],['💙','Blue Heart'],['💚','Green Heart'],['💛','Yellow Heart'],['🧡','Orange Heart'],['❤️','Red Heart'],['🔥','Flame'],['⚡','Lightning'],['❄️','Snowflake'],['🌈','Rainbow'],['🌙','Moon'],['☀️','Sun'],['🎈','Balloon'],['🎁','Gift'],['👑','Crown'],['🪄','Magic Wand'],['🌸','Blossom'],['🍀','Clover'],['🦄','Unicorn']];
+
+/* Formulas: ingredients are candy ids (order irrelevant on the board) */
+const BUILTIN_FORMULAS = [
+  {id:'syn_ruby',     name:'Ruby Candy',  icon:'🔻', ing:['red','red'], pts:100, builtin:true},
+  {id:'syn_amethyst', name:'Amethyst Orb',icon:'🔮', ing:['purple','purple'], pts:120, builtin:true},
+  {id:'syn_star',     name:'Super Star',  icon:'⭐', ing:['yellow','red','syn_ruby'], pts:150, builtin:true}
+];
+const BUILTIN_RULES = [
+  {id:'r_ruby', name:'Ruby Combination Bonus', trig:{kind:'synth', candy:'syn_ruby'}, rew:{kind:'points', value:200}, builtin:true},
+  {id:'r_casc', name:'Cascade Bonus', trig:{kind:'combo', n:3}, rew:{kind:'moves', value:1}, builtin:true}
+];
+let FORMULAS = [], RULES = [];
+function rebuildRegistry(){
+  Object.keys(CANDY).forEach(k => { if(!CANDY[k].base) delete CANDY[k]; });
+  FORMULAS = BUILTIN_FORMULAS.concat(store.get('formulas', []));
+  RULES = BUILTIN_RULES.concat(store.get('rules', []));
+  FORMULAS.forEach((f, i) => { CANDY[f.id] = {id:f.id, name:f.name, icon:f.icon, color:SYN_COLORS[i % SYN_COLORS.length], pts:f.pts, base:false, formula:f.ing}; });
+}
+const fkey = ing => ing.slice().sort().join('+');
+
+/* ---------- Levels ---------- */
+const levelCfg = n => ({target:1300 + 300*(n-1), moves:24 - Math.floor((n-1)/4)});
+
+/* ---------- Game state ---------- */
+let S = null;       // current session
+let sound = true;
+let pickedLevel = 1;
+let selectedBook = null;   // {type:'candy'|'formula'|'rule', id}
+let bookTab = 'candies';
+
+function newStats(){ return {score:0, valid:0, invalid:0, m:{2:0,3:0,4:0,5:0}, matches:0, maxCombo:1, moves:0}; }
+function newSession(name, mode, level){
+  const cfg = levelCfg(level);
+  return {
+    id:'SESS_' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    name, mode, level, target:cfg.target, movesLeft:cfg.moves, totalMoves:cfg.moves,
+    grid:null, turn:'player', busy:false, over:false, cleared:false, sel:null, hint:null,
+    P:newStats(), A:newStats(), hints:0, status:'IN_PROGRESS', startedAt:new Date().toISOString(),
+    learn:{strat:{pair:0,std:0,striped:0,bomb:0,synthN2:0,synthN:0,cascade:0}, fav:{}, sigs:new Set()},
+    log:[]
+  };
+}
+
+/* =====================================================================
+   MODULE 2: BOARD + MATCH ENGINE (pure functions on a grid)
+   ===================================================================== */
+let tileSeq = 1;
+const randBase = () => BASE[rnd(BASE.length)];
+const mkTile = (t, s=null) => ({t, s, id:tileSeq++});
+const cloneGrid = g => g.map(row => row.map(x => x ? {...x} : null));
+
+function genBoard(){
+  for(let tries = 0; tries < 50; tries++){
+    const g = Array.from({length:R}, () => Array(C).fill(null));
+    for(let r = 0; r < R; r++) for(let c = 0; c < C; c++){
+      let t; let guard = 0;
+      do { t = randBase(); guard++; }
+      while(guard < 20 && ((c >= 2 && g[r][c-1].t === t && g[r][c-2].t === t) || (r >= 2 && g[r-1][c].t === t && g[r-2][c].t === t)));
+      g[r][c] = mkTile(t);
+    }
+    if(hasMoves(g)) return g;
+  }
+  throw new Error('Could not generate a playable board');
+}
+
+function findRuns(g, minLen){
+  const runs = [];
+  for(let r = 0; r < R; r++){
+    let c = 0;
+    while(c < C){
+      const x = g[r][c]; let e = c;
+      if(x && x.t !== 'bomb'){
+        while(e + 1 < C && g[r][e+1] && g[r][e+1].t === x.t) e++;
+        if(e - c + 1 >= minLen) runs.push({t:x.t, dir:'h', cells:Array.from({length:e-c+1}, (_, i) => [r, c+i])});
+      }
+      c = e + 1;
+    }
+  }
+  for(let c = 0; c < C; c++){
+    let r = 0;
+    while(r < R){
+      const x = g[r][c]; let e = r;
+      if(x && x.t !== 'bomb'){
+        while(e + 1 < R && g[e+1][c] && g[e+1][c].t === x.t) e++;
+        if(e - r + 1 >= minLen) runs.push({t:x.t, dir:'v', cells:Array.from({length:e-r+1}, (_, i) => [r+i, c])});
+      }
+      r = e + 1;
+    }
+  }
+  return runs;
+}
+
+/* Build a clearing plan. mode 'swap' (after a swap, sw = [[r,c],[r,c]]) or 'cascade' */
+function planClear(g, mode, sw){
+  const clear = new Set(), spawns = [], events = [], types = new Set();
+  const K = (r, c) => r*C + c;
+  let base = 0, synthFired = null;
+
+  if(mode === 'swap'){
+    const [a, b] = sw; const ta = g[a[0]][a[1]], tb = g[b[0]][b[1]];
+    if(ta.t === 'bomb' || tb.t === 'bomb'){
+      let target = null;
+      if(ta.t !== 'bomb') target = ta.t; else if(tb.t !== 'bomb') target = tb.t;
+      for(let r = 0; r < R; r++) for(let c = 0; c < C; c++){
+        const x = g[r][c]; if(x && (target === null || x.t === target)) clear.add(K(r, c));
+      }
+      clear.add(K(a[0], a[1])); clear.add(K(b[0], b[1]));
+      events.push({kind:'bomb', size:5, type:target || 'bomb'}); types.add(target || 'bomb');
+      base += 150;
+    } else {
+      // synthesis formulas first (largest formula first)
+      const fl = FORMULAS.slice().sort((x, y) => y.ing.length - x.ing.length);
+      outer:
+      for(const f of fl){
+        const N = f.ing.length, want = fkey(f.ing);
+        for(const p of sw) for(const dir of ['h','v']) for(let s = -(N-1); s <= 0; s++){
+          const cells = [];
+          for(let i = 0; i < N; i++){ const r = p[0] + (dir === 'v' ? s+i : 0), c = p[1] + (dir === 'h' ? s+i : 0); cells.push([r, c]); }
+          if(!cells.every(([r, c]) => r >= 0 && r < R && c >= 0 && c < C && g[r][c] && g[r][c].t !== 'bomb')) continue;
+          if(fkey(cells.map(([r, c]) => g[r][c].t)) !== want) continue;
+          cells.forEach(([r, c]) => clear.add(K(r, c)));
+          spawns.push({r:p[0], c:p[1], tile:mkTile(f.id)});
+          events.push({kind:'synth', size:N, formula:f, type:f.id});
+          base += f.pts; types.add(f.id);
+          synthFired = f; break outer;
+        }
+      }
+      if(!synthFired){
+        const swKeys = new Set(sw.map(([r, c]) => K(r, c)));
+        const runs = findRuns(g, 2).filter(run => run.cells.some(([r, c]) => swKeys.has(K(r, c))));
+        addRuns(runs, sw);
+      }
+    }
+  } else {
+    addRuns(findRuns(g, 3), null);
+  }
+
+  function addRuns(runs, sw2){
+    for(const run of runs){
+      const n = run.cells.length;
+      run.cells.forEach(([r, c]) => clear.add(K(r, c)));
+      events.push({kind:'run', size:n, type:run.t}); types.add(run.t);
+      if(n >= 4){
+        let pos = run.cells[Math.floor(n/2)];
+        if(sw2){ const hit = run.cells.find(([r, c]) => sw2.some(p => p[0] === r && p[1] === c)); if(hit) pos = hit; }
+        if(n >= 5) spawns.push({r:pos[0], c:pos[1], tile:mkTile('bomb')});
+        else spawns.push({r:pos[0], c:pos[1], tile:mkTile(run.t, run.dir === 'h' ? 'v' : 'h')});
+        base += n >= 5 ? 150 : 60;
+      }
+    }
+  }
+
+  // striped candies explode their line (chain reaction)
+  const protect = new Set(spawns.map(sp => K(sp.r, sp.c)));
+  const queue = [...clear]; const seen = new Set(queue);
+  while(queue.length){
+    const k = queue.pop(), r = Math.floor(k / C), c = k % C, x = g[r][c];
+    if(!x || !x.s || protect.has(k)) continue;
+    const add = [];
+    if(x.s === 'h') for(let i = 0; i < C; i++) add.push(K(r, i)); else for(let i = 0; i < R; i++) add.push(K(i, c));
+    for(const kk of add){ if(!seen.has(kk) && g[Math.floor(kk / C)][kk % C]){ seen.add(kk); clear.add(kk); queue.push(kk); } }
+    base += 20;
+  }
+  clear.forEach(k => { const x = g[Math.floor(k / C)][k % C]; if(x) base += (CANDY[x.t] ? CANDY[x.t].pts : 30); });
+  // a formula's reward is already counted through its pts value; the ingredient tiles add their base value too.
+  return {clear, spawns, events, types, base};
+}
+
+/* Apply the plan: clear, place spawned specials, drop tiles. refill=false for AI simulation. */
+function applyPlan(g, plan, refill){
+  plan.clear.forEach(k => { g[Math.floor(k / C)][k % C] = null; });
+  plan.spawns.forEach(sp => { g[sp.r][sp.c] = sp.tile; });
+  const fall = Array.from({length:R}, () => Array(C).fill(0));
+  const born = new Set(plan.spawns.map(sp => sp.r*C + sp.c));
+  for(let c = 0; c < C; c++){
+    let w = R - 1;
+    for(let r = R - 1; r >= 0; r--){
+      if(g[r][c]){ if(r !== w){ g[w][c] = g[r][c]; g[r][c] = null; fall[w][c] = w - r; born.delete(r*C + c); } w--; }
+    }
+    for(let r = w; r >= 0; r--){ if(refill){ g[r][c] = mkTile(randBase()); fall[r][c] = w + 1; } }
+  }
+  return {fall, born};
+}
+
+function trySwap(g, a, b){
+  const ga = g[a[0]][a[1]], gb = g[b[0]][b[1]];
+  if(!ga || !gb) return null;
+  const h = cloneGrid(g);
+  [h[a[0]][a[1]], h[b[0]][b[1]]] = [h[b[0]][b[1]], h[a[0]][a[1]]];
+  const plan = planClear(h, 'swap', [a, b]);
+  return plan.clear.size ? plan : null;
+}
+const neighbours = (r, c) => [[r, c+1], [r+1, c]].filter(([y, x]) => y < R && x < C);
+function hasMoves(g){
+  for(let r = 0; r < R; r++) for(let c = 0; c < C; c++) for(const n of neighbours(r, c)) if(trySwap(g, [r, c], n)) return true;
+  return false;
+}
+
+/* Estimate total value of a move incl. deterministic cascades (no refill) */
+function simulate(g, a, b){
+  const h = cloneGrid(g);
+  [h[a[0]][a[1]], h[b[0]][b[1]]] = [h[b[0]][b[1]], h[a[0]][a[1]]];
+  let plan = planClear(h, 'swap', [a, b]);
+  if(!plan.clear.size) return null;
+  let total = 0, combo = 0, specials = 0, synth = 0; const types = new Set(plan.types);
+  while(plan.clear.size && combo < 6){
+    combo++; total += plan.base * Math.min(combo, 5);
+    specials += plan.spawns.length; plan.events.forEach(e => { if(e.kind === 'synth') synth++; });
+    applyPlan(h, plan, false);
+    plan = planClear(h, 'cascade');
+  }
+  return {score:total, combo, specials, synth, types};
+}
+function allMoves(g){
+  const out = [];
+  for(let r = 0; r < R; r++) for(let c = 0; c < C; c++) for(const n of neighbours(r, c)){
+    const s = simulate(g, [r, c], n); if(s) out.push({a:[r, c], b:n, ...s});
+  }
+  return out;
+}
+
+/* =====================================================================
+   RENDERING
+   ===================================================================== */
+const boardEl = $('#board');
+function renderBoard(o = {}){
+  const g = S.grid, pop = o.pop || new Set(), fall = o.fall, born = o.born || new Set(), hint = S.hint, sel = S.sel, shake = o.shake || new Set();
+  let h = '';
+  for(let r = 0; r < R; r++) for(let c = 0; c < C; c++){
+    const x = g[r][c], k = r*C + c; let inner = '';
+    if(x){
+      const cd = CANDY[x.t] || CANDY.red;
+      const cls = ['candy'];
+      if(x.t === 'bomb') cls.push('bomb');
+      if(x.s) cls.push('s-' + x.s);
+      if(pop.has(k)) cls.push('pop');
+      else if(shake.has(k)) cls.push('shake');
+      else if(born.has(k)) cls.push('born');
+      else if(fall && fall[r][c]) cls.push('fall');
+      inner = `<div class="${cls.join(' ')}" style="--cc:${cd.color};${fall && fall[r][c] ? '--f:' + fall[r][c] : ''}">${cd.icon}</div>`;
+    }
+    const cc = ['cell']; if((r + c) % 2) cc.push('alt');
+    if(sel && sel[0] === r && sel[1] === c) cc.push('sel');
+    if(hint && hint.some(p => p[0] === r && p[1] === c)) cc.push('hint');
+    h += `<div class="${cc.join(' ')}" data-r="${r}" data-c="${c}">${inner}</div>`;
+  }
+  boardEl.innerHTML = h;
+}
+
+function floatText(txt, r, c){
+  const cell = boardEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`); if(!cell) return;
+  const f = document.createElement('div'); f.className = 'floaty'; f.textContent = txt; cell.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
+}
+
+function updateHUD(){
+  $('#hName').textContent = S.name; $('#hLevel').textContent = S.level;
+  $('#hScore').textContent = S.P.score.toLocaleString(); $('#hTarget').textContent = S.target.toLocaleString();
+  $('#hMoves').textContent = S.movesLeft; $('#hMatches').textContent = S.P.matches;
+  $('#sP').textContent = S.P.score.toLocaleString(); $('#sA').textContent = S.A.score.toLocaleString();
+  $('#mT').textContent = S.P.matches; $('#m2').textContent = S.P.m[2]; $('#m3').textContent = S.P.m[3]; $('#m4').textContent = S.P.m[4]; $('#m5').textContent = S.P.m[5];
+  updateAIPanel();
+}
+function setBanner(txt, cls = ''){ const b = $('#banner'); b.textContent = txt; b.className = cls; }
+function setSub(txt){ $('#subbar').textContent = txt; }
+function addLog(msg){
+  S.log.unshift(msg);
+  const box = $('#log'); const d = document.createElement('div'); d.innerHTML = msg; box.prepend(d);
+  while(box.children.length > 40) box.lastChild.remove();
+}
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+/* =====================================================================
+   SOUND
+   ===================================================================== */
+let actx = null;
+function tone(f, d = .12, type = 'sine', v = .06, delay = 0){
+  if(!sound) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + delay;
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + d);
+  }catch(e){}
+}
+const sfx = {
+  swap:() => tone(330, .08, 'triangle'),
+  bad:() => { tone(160, .18, 'sawtooth', .04); },
+  match:n => { tone(440 + n*70, .14, 'triangle'); tone(660 + n*90, .16, 'sine', .05, .07); },
+  synth:() => [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'sine', .06, i*.07)),
+  win:() => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .25, 'triangle', .07, i*.1)),
+  lose:() => [392, 330, 262].forEach((f, i) => tone(f, .3, 'sawtooth', .04, i*.15))
+};
+
+/* =====================================================================
+   RULES ENGINE (custom game rules)
+   ===================================================================== */
+function applyRules(actor, ev, comboLevel){
+  const A = actor === 'player' ? S.P : S.A; let bonus = 0; const fired = [];
+  for(const rule of RULES){
+    const t = rule.trig; let hit = false;
+    if(t.kind === 'synth') hit = ev && ev.kind === 'synth' && (!t.candy || t.candy === ev.type);
+    else if(t.kind === 'match') hit = ev && ev.kind !== 'synth' && ev.size >= t.n && (!t.candy || t.candy === ev.type);
+    else if(t.kind === 'combo') hit = !ev && comboLevel === t.n;
+    if(!hit) continue;
+    if(rule.rew.kind === 'points'){ bonus += rule.rew.value; fired.push(`📜 Rule “${esc(rule.name)}”: +${rule.rew.value} pts`); }
+    else if(actor === 'player'){ S.movesLeft += rule.rew.value; fired.push(`📜 Rule “${esc(rule.name)}”: +${rule.rew.value} move${rule.rew.value > 1 ? 's' : ''}`); }
+  }
+  A.score += bonus; fired.forEach(addLog);
+  return bonus;
+}
+
+/* =====================================================================
+   RESOLUTION LOOP
+   ===================================================================== */
+async function resolve(actor, sw){
+  const mine = S;
+  const A = actor === 'player' ? S.P : S.A;
+  let plan = planClear(S.grid, 'swap', sw), combo = 0; const evs = []; let gained = 0;
+  while(plan && plan.clear.size){
+    combo++; const mult = Math.min(combo, 5);
+    const pts = plan.base * mult; A.score += pts; gained += pts; A.maxCombo = Math.max(A.maxCombo, mult);
+    let hasSynth = false;
+    for(const ev of plan.events){
+      evs.push({...ev, combo});
+      const sz = Math.min(ev.size, 5); A.m[sz]++; A.matches++;
+      if(ev.kind === 'synth'){
+        hasSynth = true;
+        addLog(`🧪 CANDY SYNTHESIS EXECUTED! Yielded ${CANDY[ev.type].icon} ${esc(CANDY[ev.type].name)} (+${ev.formula.pts} pts)!`);
+      }
+      applyRules(actor, ev, combo);
+    }
+    if(combo >= 2) applyRules(actor, null, combo);
+    if(combo >= 2) addLog(`🔥 Cascade x${combo}!`);
+    hasSynth ? sfx.synth() : sfx.match(combo);
+    // animate
+    renderBoard({pop:plan.clear});
+    const mid = [...plan.clear][Math.floor(plan.clear.size / 2)];
+    floatText('+' + pts.toLocaleString() + (mult > 1 ? ` x${mult}` : ''), Math.floor(mid / C), mid % C);
+    updateHUD();
+    await sleep(300);
+    if(S !== mine) return {evs, gained, combo};
+    const res = applyPlan(S.grid, plan, true);
+    renderBoard({fall:res.fall, born:res.born});
+    await sleep(340);
+    if(S !== mine) return {evs, gained, combo};
+    plan = planClear(S.grid, 'cascade');
+  }
+  return {evs, gained, combo};
+}
+
+/* =====================================================================
+   SWAP HANDLING
+   ===================================================================== */
+async function attemptSwap(a, b, actor){
+  if(S.busy || S.over) return false;
+  const A = actor === 'player' ? S.P : S.A;
+  S.busy = true; S.sel = null; S.hint = null;
+  const plan = trySwap(S.grid, a, b);
+  const ta = S.grid[a[0]][a[1]], tb = S.grid[b[0]][b[1]];
+  [S.grid[a[0]][a[1]], S.grid[b[0]][b[1]]] = [tb, ta];
+  renderBoard(); sfx.swap();
+  if(!plan){
+    A.invalid++;
+    await sleep(160);
+    renderBoard({shake:new Set([a[0]*C + a[1], b[0]*C + b[1]])});
+    sfx.bad(); await sleep(150);
+    [S.grid[a[0]][a[1]], S.grid[b[0]][b[1]]] = [ta, tb];
+    renderBoard();
+    if(actor === 'player') setSub('❌ Invalid swap. A match of 2 or more is needed. No move used.');
+    updateHUD(); S.busy = false;
+    return false;
+  }
+  A.valid++; A.moves++;
+  if(actor === 'player') S.movesLeft--;
+  const mine = S;
+  const r = await resolve(actor, [a, b]);
+  if(S !== mine) return false;
+  if(actor === 'player') learnFrom(ta, tb, r);
+  persistSession();
+  S.busy = false;
+  updateHUD();
+  return r;
+}
+
+/* ---------- input ---------- */
+let downCell = null;
+boardEl.addEventListener('pointerdown', e => {
+  const cell = e.target.closest('.cell'); if(!cell) return;
+  downCell = [+cell.dataset.r, +cell.dataset.c];
+});
+window.addEventListener('pointerup', e => {
+  if(!downCell || !S) return;
+  const start = downCell; downCell = null;
+  if(S.over || S.busy || S.turn !== 'player') return;
+  const el = document.elementFromPoint(e.clientX, e.clientY); const cell = el && el.closest && el.closest('#board .cell');
+  const end = cell ? [+cell.dataset.r, +cell.dataset.c] : start;
+  const adj = (p, q) => Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) === 1;
+  if(end[0] !== start[0] || end[1] !== start[1]){
+    if(adj(start, end)) return playerMove(start, end);
+    S.sel = start; return renderBoard();
+  }
+  if(S.sel && adj(S.sel, start)) return playerMove(S.sel, start);
+  S.sel = (S.sel && S.sel[0] === start[0] && S.sel[1] === start[1]) ? null : start;
+  renderBoard();
+});
+
+async function playerMove(a, b){
+  if(S.turn !== 'player' || S.busy || S.over) return;
+  const mine = S;
+  S.turn = 'wait';
+  const ok = await attemptSwap(a, b, 'player');
+  if(S !== mine) return;
+  if(!ok){ S.turn = 'player'; return; }
+  if(S.P.score >= S.target && !S.cleared){ S.cleared = true; await onTargetReached(); if(S !== mine || S.over) return; }
+  await afterPlayerMove();
+}
+
+async function afterPlayerMove(){
+  if(S.over) return;
+  await ensurePlayable();
+  if(S.mode === 'PLAYER_VS_AI'){
+    S.turn = 'ai'; setBanner('🤖 AI OPPONENT\'S TURN', 'ai'); setSub('The AI is analysing the board...');
+    const mine = S;
+    await sleep(700); await aiMove();
+    if(S !== mine || S.over) return;
+    S.turn = 'player';
+  }
+  if(S.movesLeft <= 0){ return endLevel(); }
+  S.turn = 'player';
+  setBanner('👤 YOUR TURN'); setSub("Click '💡 Ask AI for Hint' for valid move assistance!");
+  updateHUD();
+}
+
+async function ensurePlayable(){
+  if(!S || hasMoves(S.grid)) return;
+  if(hasMoves(S.grid)) return;
+  toast('No moves left. Reshuffling the board.'); addLog('🔀 No valid moves. Board reshuffled.');
+  S.grid = genBoard(); renderBoard({born:new Set(Array.from({length:64}, (_, i) => i))}); await sleep(400);
+}
+
+async function onTargetReached(){
+  sfx.win();
+  if(S.mode === 'PLAYER_ONLY'){
+    markCleared();
+    S.busy = true;
+    openModal(`<div class="modal narrow res"><p class="big">🎉</p><h2 class="gold">Target Reached!</h2>
+      <p>${S.name} scored <b>${S.P.score.toLocaleString()}</b> in level ${S.level} with <b>${S.movesLeft}</b> moves to spare.</p>
+      <div class="actions" style="justify-content:center;margin-top:18px">
+        ${S.level < 20 ? '<button class="btn go" id="rNext">Next Level ▶</button>' : ''}
+        <button class="btn" id="rKeep">Keep Playing</button>
+      </div></div>`, () => {
+        const n = $('#rNext'); if(n) n.onclick = () => { closeModal(); startGame(S.name, S.mode, S.level + 1); };
+        $('#rKeep').onclick = () => { closeModal(); S.busy = false; };
+      });
+    // wait for choice
+    const mine = S;
+    while(S === mine && S.busy && !S.over) await sleep(120);
+  } else {
+    addLog('🎯 Target reached! Keep scoring to beat the AI.'); toast('Target reached!');
+  }
+}
+function markCleared(){
+  const done = store.get('cleared', {});
+  const stars = S.movesLeft >= S.totalMoves*.4 ? 3 : S.movesLeft >= S.totalMoves*.15 ? 2 : 1;
+  done[S.level] = Math.max(done[S.level] || 0, stars); store.set('cleared', done);
+  S.status = 'LEVEL_CLEARED'; persistSession();
+}
+
+function endLevel(){
+  S.over = true; S.busy = false;
+  const won = S.P.score >= S.target;
+  let title, msg, icon;
+  if(S.mode === 'PLAYER_VS_AI'){
+    const beat = S.P.score > S.A.score, draw = S.P.score === S.A.score;
+    if(won) markCleared();
+    S.status = won ? (beat ? 'WON_VS_AI' : draw ? 'DRAW_TARGET_MET' : 'TARGET_MET_AI_HIGHER') : (beat ? 'BEAT_AI_TARGET_MISSED' : 'LOST');
+    icon = beat ? '🏆' : draw ? '🤝' : '🤖';
+    title = beat ? 'You beat the AI!' : draw ? 'Draw' : 'The AI wins this round';
+    msg = `${esc(S.name)} <b>${S.P.score.toLocaleString()}</b> vs AI <b>${S.A.score.toLocaleString()}</b>. Target ${S.target.toLocaleString()} ${won ? 'reached ✅' : 'missed ❌'}.`;
+  } else {
+    if(won){ markCleared(); S.status = 'LEVEL_CLEARED'; icon = '🎉'; title = 'Level Cleared!'; }
+    else { S.status = 'OUT_OF_MOVES'; icon = '😵'; title = 'Out of Moves'; }
+    msg = `Score <b>${S.P.score.toLocaleString()}</b> of ${S.target.toLocaleString()}.`;
+  }
+  won ? sfx.win() : sfx.lose();
+  persistSession(); setBanner('🏁 LEVEL OVER', 'over'); setSub(title);
+  const next = won && S.level < 20;
+  openModal(`<div class="modal narrow res"><p class="big">${icon}</p><h2 class="gold">${title}</h2><p>${msg}</p>
+    <p>Accuracy ${accuracy(S.P)}%. Max combo ${S.P.maxCombo}x.</p>
+    <div class="actions" style="justify-content:center;margin-top:18px">
+      ${next ? '<button class="btn go" id="rNext">Next Level ▶</button>' : ''}
+      <button class="btn ${next ? '' : 'go'}" id="rAgain">Play Again</button>
+      <button class="btn" id="rBI">📊 Analytics</button>
+    </div></div>`, () => {
+      const n = $('#rNext'); if(n) n.onclick = () => { closeModal(); startGame(S.name, S.mode, S.level + 1); };
+      $('#rAgain').onclick = () => { closeModal(); startGame(S.name, S.mode, S.level); };
+      $('#rBI').onclick = () => openDashboard();
+  });
+}
+
+/* =====================================================================
+   MODULE 4: AI  (hints, opponent, learning)
+   ===================================================================== */
+function learnFrom(ta, tb, r){
+  const L = S.learn;
+  for(const ev of r.evs){
+    if(ev.kind === 'synth'){ ev.size === 2 ? L.strat.synthN2++ : L.strat.synthN++; }
+    else if(ev.kind === 'bomb') L.strat.bomb++;
+    else if(ev.size >= 5) L.strat.bomb++; else if(ev.size === 4) L.strat.striped++; else if(ev.size === 3) L.strat.std++; else L.strat.pair++;
+    if(ev.type && CANDY[ev.type] && !CANDY[ev.type].hidden) L.fav[ev.type] = (L.fav[ev.type] || 0) + ev.size;
+  }
+  if(r.combo >= 2) L.strat.cascade++;
+  const best = Math.max(0, ...r.evs.map(e => e.size));
+  L.sigs.add([ta.t, tb.t].sort().join('/') + ':' + best);
+}
+const aiLevel = () => { const n = S.learn.sigs.size; return n >= 12 ? 5 : n >= 8 ? 4 : n >= 4 ? 3 : n >= 1 ? 2 : 1; };
+function stratLabel(){
+  const s = S.learn.strat, entries = [['Synthesis Pair Combination', s.synthN2], ['Synthesis Chain Combination', s.synthN], ['Pair Combo Chaining', s.pair], ['Standard Match Building', s.std], ['Striped Candy Crafting', s.striped], ['Color Bomb Hunting', s.bomb], ['Cascade Chasing', s.cascade]];
+  const total = entries.reduce((a, e) => a + e[1], 0); if(!total) return 'Observing Player...';
+  // synthesis is the rarest signal, so it wins whenever it appears often enough
+  const synth = s.synthN2 + s.synthN; if(synth >= 2 && synth*4 >= total) return s.synthN2 >= s.synthN ? entries[0][0] : entries[1][0];
+  return entries.slice(2).sort((x, y) => y[1] - x[1])[0][0];
+}
+function favCandy(){
+  const e = Object.entries(S.learn.fav).sort((a, b) => b[1] - a[1])[0]; return e ? CANDY[e[0]] : null;
+}
+function updateAIPanel(){
+  if(!S) return;
+  $('#aStrat').textContent = stratLabel();
+  const f = favCandy(); $('#aFav').innerHTML = f ? `${f.icon} ${esc(f.name.split(' ')[0] + (f.name.split(' ')[1] ? ' ' + f.name.split(' ')[1] : ''))}` : 'None';
+  $('#aLvl').textContent = `Level ${aiLevel()} (${S.learn.sigs.size} Swaps Learned)`;
+}
+
+function pickAIMove(){
+  const moves = allMoves(S.grid); if(!moves.length) return null;
+  const lvl = aiLevel(), fav = favCandy();
+  const score = m => {
+    let v = m.score;
+    if(lvl >= 2 && fav && m.types.has(fav.id)) v *= 1.25;
+    if(lvl >= 4) v += m.specials*90 + m.synth*120;
+    if(lvl >= 5) v += (m.combo - 1)*140;
+    return v;
+  };
+  moves.sort((x, y) => score(y) - score(x));
+  if(lvl === 1) return moves[rnd(moves.length)];
+  if(lvl === 2) return moves[rnd(Math.max(1, Math.ceil(moves.length/2)))];
+  if(lvl === 3) return moves[rnd(Math.min(3, moves.length))];
+  return moves[0];
+}
+async function aiMove(){
+  const m = pickAIMove();
+  if(!m){ await ensurePlayable(); return; }
+  S.hint = [m.a, m.b]; renderBoard(); await sleep(650);
+  const icA = CANDY[S.grid[m.a[0]][m.a[1]].t].icon, icB = CANDY[S.grid[m.b[0]][m.b[1]].t].icon;
+  addLog(`🤖 AI (Lv ${aiLevel()}) swaps ${icA} ⇄ ${icB}`);
+  const before = S.A.score;
+  S.busy = false;
+  const r = await attemptSwap(m.a, m.b, 'ai');
+  if(r) addLog(`🤖 AI scored +${(S.A.score - before).toLocaleString()}`);
+  await ensurePlayable();
+}
+
+$('#bHint').onclick = () => {
+  if(!S || S.over || S.busy || S.turn !== 'player') return;
+  const moves = allMoves(S.grid).sort((x, y) => y.score - x.score);
+  if(!moves.length){ toast('No valid moves.'); return; }
+  const m = moves[0]; S.hint = [m.a, m.b]; S.hints++; renderBoard();
+  const A = S.grid[m.a[0]][m.a[1]], B = S.grid[m.b[0]][m.b[1]];
+  addLog(`💡 Hint: swap ${CANDY[A.t].icon} (row ${m.a[0]+1}, col ${m.a[1]+1}) with ${CANDY[B.t].icon} (row ${m.b[0]+1}, col ${m.b[1]+1}), about +${m.score} pts`);
+  setSub(`💡 Best move glows on the board (about +${m.score} pts).`);
+};
+
+/* =====================================================================
+   MODULE 3: RESEARCH BOOK, SYNTHESIS, RULES, AI WORTH CHECK
+   ===================================================================== */
+function renderBook(){
+  const q = $('#search').value.trim().toLowerCase(); const el = $('#book');
+  if(bookTab === 'candies'){
+    const list = Object.values(CANDY).filter(c => !c.hidden && (!q || c.name.toLowerCase().includes(q)));
+    el.innerHTML = `<div class="cgrid">${list.map(c => `<button class="ccard ${selectedBook && selectedBook.type === 'candy' && selectedBook.id === c.id ? 'on' : ''}" data-id="${c.id}"><span class="ic">${c.icon}</span>${esc(c.name)}<em>${c.pts} pts</em></button>`).join('') || '<p>No candies match.</p>'}</div>`;
+    el.querySelectorAll('.ccard').forEach(b => b.onclick = () => { selectedBook = {type:'candy', id:b.dataset.id}; renderBook(); runWorth(); });
+  } else {
+    const nm = i => CANDY[i] ? `${CANDY[i].icon} ${esc(CANDY[i].name)}` : '?';
+    const std = [['Match 2','Pair Combo','Clears the pair'],['Match 3','Standard Match','Clears the line'],['Match 4','Striped Candy','Creates a line-clearing candy'],['Match 5','Color Bomb','Swap it to wipe one colour']]
+      .map(x => ({k:x[0], t:x[1], d:x[2]}));
+    let h = `<span class="k">Match rules</span>` + std.filter(x => !q || (x.k + x.t).toLowerCase().includes(q)).map(x => `<div class="entry"><b>${x.k}</b> → ${x.t}<br>${x.d}</div>`).join('');
+    const fs = FORMULAS.filter(f => !q || (f.name + f.ing.map(i => CANDY[i] ? CANDY[i].name : '').join(' ')).toLowerCase().includes(q));
+    h += `<span class="k" style="margin:8px 0 6px">Synthesis formulas</span>` + fs.map(f => `<button class="entry ${selectedBook && selectedBook.type === 'formula' && selectedBook.id === f.id ? 'on' : ''}" data-t="formula" data-id="${f.id}">${f.ing.map(nm).join(' + ')} → <b>${f.icon} ${esc(f.name)}</b> (+${f.pts} pts)</button>`).join('');
+    const rs = RULES.filter(r => !q || r.name.toLowerCase().includes(q));
+    h += `<span class="k" style="margin:8px 0 6px">Custom rules</span>` + rs.map(r => `<button class="entry ${selectedBook && selectedBook.type === 'rule' && selectedBook.id === r.id ? 'on' : ''}" data-t="rule" data-id="${r.id}"><b>${esc(r.name)}</b><br>${describeRule(r)}</button>`).join('');
+    el.innerHTML = h;
+    el.querySelectorAll('button.entry').forEach(b => b.onclick = () => { selectedBook = {type:b.dataset.t, id:b.dataset.id}; renderBook(); runWorth(); });
+  }
+}
+function describeRule(r){
+  const t = r.trig, w = t.candy && CANDY[t.candy] ? `${CANDY[t.candy].icon} ${esc(CANDY[t.candy].name)}` : 'any candy';
+  const when = t.kind === 'synth' ? `When ${w} is synthesized` : t.kind === 'match' ? `On a match of ${t.n}+ with ${w}` : `When a cascade reaches x${t.n}`;
+  const rew = r.rew.kind === 'points' ? `+${r.rew.value} pts` : `+${r.rew.value} move${r.rew.value > 1 ? 's' : ''}`;
+  return `${when}: <b>${rew}</b>`;
+}
+$('#tabC').onclick = () => { bookTab = 'candies'; $('#tabC').classList.add('on'); $('#tabK').classList.remove('on'); renderBook(); };
+$('#tabK').onclick = () => { bookTab = 'combos'; $('#tabK').classList.add('on'); $('#tabC').classList.remove('on'); renderBook(); };
+$('#search').oninput = renderBook;
+$('#bWorth').onclick = () => { if(!selectedBook){ toast('Pick a candy, formula or rule first.'); return; } runWorth(); };
+
+/* ----- AI Worth Check: rule-based evaluators ----- */
+function worthFormula(f, existingIgnoreId){
+  const reasons = [], N = f.ing.length;
+  let ok = true;
+  const name = (f.name || '').trim();
+  if(!name){ ok = false; reasons.push('The candy needs a name.'); }
+  else if(name.length > 24){ ok = false; reasons.push('The name is longer than 24 characters.'); }
+  if(!Number.isFinite(f.pts) || f.pts <= 0){ ok = false; reasons.push('The score value must be a positive number.'); }
+  else if(f.pts > 1000){ ok = false; reasons.push('Score values above 1000 would break the balance.'); }
+  if(f.ing.some(i => !CANDY[i])){ ok = false; reasons.push('One of the ingredients does not exist.'); }
+  const others = FORMULAS.filter(x => x.id !== existingIgnoreId);
+  if(others.some(x => fkey(x.ing) === fkey(f.ing))){ ok = false; reasons.push('Another candy already uses this exact formula.'); }
+  if(others.some(x => x.name.toLowerCase() === name.toLowerCase())){ ok = false; reasons.push('A candy with this name already exists.'); }
+  if(f.ing.length && f.ing.includes(f.id)){ ok = false; reasons.push('A candy cannot be its own ingredient.'); }
+  const sum = f.ing.reduce((s, i) => s + (CANDY[i] ? CANDY[i].pts : 0), 0);
+  const fair = Math.round(sum*0.6 + N*N*10);
+  const ratio = Number.isFinite(f.pts) && fair ? f.pts / fair : 0;
+  if(ok){
+    if(ratio > 1.8){ ok = false; reasons.push(`Overpowered: ${f.pts} pts is ${ratio.toFixed(2)}x the fair value of about ${fair}. Try ${Math.round(fair*1.5)} or less.`); }
+    else if(ratio < 0.5){ ok = false; reasons.push(`Not worth the effort: ${f.pts} pts is only ${ratio.toFixed(2)}x the fair value of about ${fair}.`); }
+    else reasons.push(`Worth index ${ratio.toFixed(2)}x against a fair value of about ${fair} pts for ${N} ingredients (${sum} pts of candy).`);
+  }
+  if(ok && N >= 4 && new Set(f.ing).size === 1) reasons.push('Hard to line up: all ingredients are the same colour.');
+  return {ok, reasons, ratio, fair};
+}
+function worthRule(r, ignoreId){
+  const reasons = []; let ok = true;
+  const name = (r.name || '').trim();
+  if(!name){ ok = false; reasons.push('The rule needs a name.'); }
+  if(!Number.isFinite(r.rew.value) || r.rew.value <= 0){ ok = false; reasons.push('The reward must be a positive number.'); }
+  if(RULES.some(x => x.id !== ignoreId && x.name.toLowerCase() === name.toLowerCase())){ ok = false; reasons.push('A rule with this name already exists.'); }
+  const t = r.trig;
+  const weight = t.kind === 'synth' ? 2.5 : t.kind === 'combo' ? t.n : Math.max(1, t.n - 1);
+  const fair = r.rew.kind === 'points' ? weight*100 : Math.max(1, Math.round(weight*100/250));
+  if(r.rew.kind === 'moves' && r.rew.value > 3){ ok = false; reasons.push('More than 3 extra moves is too generous.'); }
+  const ratio = fair ? r.rew.value / fair : 0;
+  if(ok){
+    if(ratio > 2){ ok = false; reasons.push(`Overpowered: reward is ${ratio.toFixed(2)}x the fair reward (${fair}${r.rew.kind === 'points' ? ' pts' : ' moves'}) for this trigger.`); }
+    else if(ratio < 0.3){ ok = false; reasons.push(`Too small to matter: reward is only ${ratio.toFixed(2)}x the fair reward (${fair}${r.rew.kind === 'points' ? ' pts' : ' moves'}).`); }
+    else reasons.push(`Balance index ${ratio.toFixed(2)}x against a fair reward of ${fair}${r.rew.kind === 'points' ? ' pts' : ' move(s)'}.`);
+  }
+  return {ok, reasons, ratio, fair};
+}
+const verdictHTML = v => `<div class="verdict ${v.ok ? 'ok' : 'no'}"><b>${v.ok ? '✅ ACCEPT' : '❌ REJECT'}</b>${v.reasons.map(esc).join('<br>')}</div>`;
+
+function runWorth(){
+  const box = $('#evalBox'); if(!selectedBook) return;
+  try{
+    if(selectedBook.type === 'candy'){
+      const c = CANDY[selectedBook.id];
+      if(c.base){ box.innerHTML = `<h5>${c.icon} ${esc(c.name)}</h5><p>Base candy worth ${c.pts} pts per tile.</p><div class="verdict ok"><b>✅ ACCEPT</b>Built-in candies are always valid.</div>`; return; }
+      const f = FORMULAS.find(x => x.id === c.id); const v = worthFormula({id:f.id, name:f.name, ing:f.ing, pts:f.pts}, f.id);
+      box.innerHTML = `<h5>${c.icon} ${esc(c.name)}</h5><p>${f.ing.map(i => CANDY[i].icon).join(' + ')} → ${c.icon} (${f.pts} pts)</p>${verdictHTML(v)}`;
+    } else if(selectedBook.type === 'formula'){
+      const f = FORMULAS.find(x => x.id === selectedBook.id); const v = worthFormula({id:f.id, name:f.name, ing:f.ing, pts:f.pts}, f.id);
+      box.innerHTML = `<h5>${f.icon} ${esc(f.name)}</h5><p>${f.ing.map(i => CANDY[i].icon).join(' + ')} → ${f.icon}</p>${verdictHTML(v)}`;
+    } else {
+      const r = RULES.find(x => x.id === selectedBook.id); const v = worthRule(r, r.id);
+      box.innerHTML = `<h5>📜 ${esc(r.name)}</h5><p>${describeRule(r)}</p>${verdictHTML(v)}`;
+    }
+  }catch(e){ box.innerHTML = '<p>The evaluator could not read this entry.</p>'; }
+}
+
+/* ---------- modals ---------- */
+const ov = $('#ov');
+function openModal(html, mount){ ov.innerHTML = html; ov.hidden = false; if(mount) mount(); const f = ov.querySelector('input,select,button'); }
+function closeModal(){ ov.hidden = true; ov.innerHTML = ''; }
+ov.addEventListener('mousedown', e => { if(e.target === ov && !ov.querySelector('.res')) closeModal(); });
+window.addEventListener('keydown', e => { if(e.key === 'Escape' && !ov.hidden && !ov.querySelector('.res')) closeModal(); });
+
+function candyOptions(sel){ return Object.values(CANDY).filter(c => !c.hidden).map(c => `<option value="${c.id}" ${sel === c.id ? 'selected' : ''}>${c.icon} ${esc(c.name)}</option>`).join(''); }
+
+function openSynth(){
+  openModal(`<div class="modal" role="dialog" aria-label="Candy synthesis"><div class="mh"><h2>🧪 Add Candy Synthesis (Match 2, 3, 4, or 5 Combination)</h2><button class="x" id="mx" aria-label="Close">✕</button></div>
+    <div class="f"><label for="sN">Select Number of Candies in Synthesis Formula:</label><select id="sN">
+      <option value="2">2 Candies Combination (Match 2: Pair Combo)</option><option value="3">3 Candies Combination (Match 3: Standard)</option>
+      <option value="4">4 Candies Combination (Match 4: Striped Candy)</option><option value="5">5 Candies Combination (Match 5: Color Bomb)</option></select></div>
+    <div class="f"><label>Synthesis Ingredients Formula:</label><div class="ing" id="sIng"></div></div>
+    <div class="f"><label for="sName">Synthesized Candy Name:</label><input id="sName" maxlength="30" value="Sapphire Drop"></div>
+    <div class="f"><label for="sIcon">Synthesized Candy Icon/Symbol (${ICONS.length} Unique Choices):</label><select id="sIcon">${ICONS.map(([i, n]) => `<option value="${i}" ${i === '💎' ? 'selected' : ''}>${i} ${n}</option>`).join('')}</select></div>
+    <div class="f"><label for="sPts">Candy Score Value:</label><input id="sPts" type="number" inputmode="numeric" value="100"></div>
+    <div id="sOut"></div>
+    <button class="btn warn" id="sCheck" style="margin-top:4px">🔬 Run AI Worth Check (Accept / Reject)</button>
+    <div class="actions"><button class="btn go" id="sAdd">Synthesize &amp; Add Candy to Game</button><button class="btn ghost" id="sCancel">Cancel</button></div></div>`, () => {
+    const ingBox = $('#sIng');
+    const buildIng = () => {
+      const n = +$('#sN').value; const prev = [...ingBox.querySelectorAll('select')].map(s => s.value);
+      ingBox.innerHTML = Array.from({length:n}, (_, i) => (i ? '<span class="plus">+</span>' : '') + `<select aria-label="Ingredient ${i+1}">${candyOptions(prev[i] || (i < 2 ? 'blue' : BASE[i % 6]))}</select>`).join('');
+    };
+    buildIng(); $('#sN').onchange = buildIng;
+    const read = () => ({id:'syn_' + Date.now().toString(36), name:$('#sName').value, icon:$('#sIcon').value, ing:[...ingBox.querySelectorAll('select')].map(s => s.value), pts:parseInt($('#sPts').value, 10)});
+    const check = () => { const f = read(); const v = worthFormula(f); $('#sOut').innerHTML = verdictHTML(v); return {f, v}; };
+    $('#sCheck').onclick = check;
+    $('#sAdd').onclick = () => {
+      try{
+        const {f, v} = check(); if(!v.ok) return;
+        f.name = f.name.trim();
+        const custom = store.get('formulas', []); custom.push({id:f.id, name:f.name, icon:f.icon, ing:f.ing, pts:f.pts}); store.set('formulas', custom);
+        rebuildRegistry(); renderBook();
+        if(S) addLog(`🧪 New formula added: ${f.ing.map(i => CANDY[i].icon).join(' + ')} → ${f.icon} ${esc(f.name)} (+${f.pts} pts)`);
+        toast(`${f.icon} ${f.name} added to the game.`); closeModal();
+      }catch(e){ $('#sOut').innerHTML = `<div class="verdict no"><b>❌ Could not add candy</b>${esc(e.message)}</div>`; }
+    };
+    $('#mx').onclick = $('#sCancel').onclick = closeModal;
+  });
+}
+function openRule(){
+  openModal(`<div class="modal" role="dialog" aria-label="Custom rule"><div class="mh"><h2>📜 Add Custom Game Rule</h2><button class="x" id="mx" aria-label="Close">✕</button></div>
+    <div class="f"><label for="rName">Rule Name:</label><input id="rName" maxlength="40" value="Grape Pair Bonus"></div>
+    <div class="f"><label for="rKind">When this happens:</label><select id="rKind">
+      <option value="match">A match is made</option><option value="synth">A candy is synthesized</option><option value="combo">A cascade reaches a combo level</option></select></div>
+    <div class="f" id="rCandyBox"><label for="rCandy">Candy involved:</label><select id="rCandy"><option value="">Any candy</option>${candyOptions('purple')}</select></div>
+    <div class="f" id="rNBox"><label for="rN">Match size or combo level (2 to 5):</label><select id="rN"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+    <div class="f"><label for="rRew">Reward:</label><select id="rRew"><option value="points">Bonus points</option><option value="moves">Extra moves</option></select></div>
+    <div class="f"><label for="rVal">Reward amount:</label><input id="rVal" type="number" inputmode="numeric" value="100"></div>
+    <div id="rOut"></div>
+    <button class="btn warn" id="rCheck" style="margin-top:4px">🔬 Run AI Worth Check (Accept / Reject)</button>
+    <div class="actions"><button class="btn go" id="rAdd">Add Rule to Game</button><button class="btn ghost" id="rCancel">Cancel</button></div></div>`, () => {
+    const sync = () => { const k = $('#rKind').value; $('#rCandyBox').hidden = k === 'combo'; $('#rNBox').hidden = k === 'synth'; };
+    $('#rKind').onchange = sync; sync();
+    const read = () => { const k = $('#rKind').value; return {id:'r_' + Date.now().toString(36), name:$('#rName').value.trim(), trig:{kind:k, candy:$('#rCandy').value || null, n:+$('#rN').value}, rew:{kind:$('#rRew').value, value:parseInt($('#rVal').value, 10)}}; };
+    const check = () => { const r = read(); const v = worthRule(r); $('#rOut').innerHTML = verdictHTML(v); return {r, v}; };
+    $('#rCheck').onclick = check;
+    $('#rAdd').onclick = () => {
+      try{
+        const {r, v} = check(); if(!v.ok) return;
+        const custom = store.get('rules', []); custom.push(r); store.set('rules', custom); rebuildRegistry(); renderBook();
+        if(S) addLog(`📜 New rule active: ${esc(r.name)}`);
+        toast(`Rule “${r.name}” added.`); closeModal();
+      }catch(e){ $('#rOut').innerHTML = `<div class="verdict no"><b>❌ Could not add rule</b>${esc(e.message)}</div>`; }
+    };
+    $('#mx').onclick = $('#rCancel').onclick = closeModal;
+  });
+}
+$('#bSynth').onclick = openSynth; $('#bRule').onclick = openRule;
+
+/* =====================================================================
+   MODULE 5: ANALYTICS (Power BI style) + CSV/JSON EXPORT
+   ===================================================================== */
+const accuracy = A => { const t = A.valid + A.invalid; return t ? Math.round(A.valid*100 / t) : 100; };
+function sessionRow(s){
+  return {PlayerID:s.name, SessionID:s.id, Mode:s.mode, Level:s.level, PlayerScore:s.P.score, AIScore:s.A.score, ValidSwaps:s.P.valid, InvalidSwaps:s.P.invalid,
+    SwapAccuracy:accuracy(s.P) + '%', Matches:s.P.matches, Match2:s.P.m[2], Match3:s.P.m[3], Match4:s.P.m[4], Match5:s.P.m[5], Combo:s.P.maxCombo + 'x',
+    AIMoves:s.A.moves, HintsUsed:s.hints, Target:s.target, Status:s.status, StartedAt:s.startedAt};
+}
+function persistSession(){
+  if(!S) return;
+  const hist = store.get('history', []); const row = sessionRow(S); const i = hist.findIndex(h => h.SessionID === S.id);
+  if(i >= 0) hist[i] = row; else hist.unshift(row);
+  store.set('history', hist.slice(0, 60));
+}
+function allRows(){ const hist = store.get('history', []); return hist.length ? hist : (S ? [sessionRow(S)] : []); }
+const csvCell = v => { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+function toCSV(rows){ if(!rows.length) return ''; const h = Object.keys(rows[0]); return [h.join(',')].concat(rows.map(r => h.map(k => csvCell(r[k])).join(','))).join('\n'); }
+
+function openDashboard(){
+  if(!S) return;
+  const P = S.P, A = S.A, tot = P.m[2] + P.m[3] + P.m[4] + P.m[5], mx = Math.max(1, P.m[2], P.m[3], P.m[4], P.m[5]);
+  const acc = accuracy(P), cur = sessionRow(S);
+  const hist = store.get('history', []).filter(h => h.SessionID !== S.id).slice(0, 5);
+  const rows = [cur].concat(hist);
+  const bar = (l, v) => `<div class="bar"><span>${l}</span><i><u style="width:${Math.round(v*100/mx)}%"></u></i><b>${v}</b></div>`;
+  openModal(`<div class="modal" role="dialog" aria-label="Analytics dashboard"><div class="mh"><h2>📊 Power BI Real-Time Telemetry &amp; Performance Dashboard</h2><button class="x" id="mx" aria-label="Close">✕</button></div>
+    <div class="tiles">
+      <div class="tile"><small>Player Score vs AI Score</small><b>${P.score.toLocaleString()} / ${A.score.toLocaleString()}</b></div>
+      <div class="tile"><small>Player vs AI Moves</small><b>${P.moves} / ${A.moves}</b></div>
+      <div class="tile"><small>Swap Accuracy</small><b style="color:var(--lime)">${acc}%</b></div>
+      <div class="tile"><small>Match 2 / 3 / 4 / 5</small><b>${P.m[2]} / ${P.m[3]} / ${P.m[4]} / ${P.m[5]}</b></div>
+      <div class="tile"><small>Max Combo Multiplier</small><b style="color:var(--gold)">${P.maxCombo}x</b></div></div>
+    <div class="dash2">
+      <div class="box"><h3>🎯 Match Distribution (Power BI Bar Chart)</h3>${bar('Match 2 (Pair Combo)', P.m[2])}${bar('Match 3 (Standard)', P.m[3])}${bar('Match 4 (Striped)', P.m[4])}${bar('Match 5 (Color Bomb)', P.m[5])}<small style="color:var(--mute)">${tot} matches in total</small></div>
+      <div class="box"><h3>🤖 Turn Efficiency &amp; Accuracy</h3><div class="meter"><u style="width:${acc}%"></u></div>
+        <span style="color:#9dffc0">Swap Precision: ${acc}% (${P.valid} valid, ${P.invalid} invalid).</span>
+        <p style="color:var(--mute);margin:10px 0 0;font-size:.8rem">Target progress: ${Math.min(100, Math.round(P.score*100/S.target))}% (${P.score.toLocaleString()} of ${S.target.toLocaleString()}). Hints used: ${S.hints}.</p></div></div>
+    <h3 style="color:var(--gold);margin:0 0 8px;font-size:1rem">📋 Live Telemetry Table (player_game_data.csv)</h3>
+    <div class="tbl"><table><thead><tr><th>PlayerID</th><th>SessionID</th><th>Mode</th><th>Level</th><th>Player Score</th><th>AI Score</th><th>Valid Swaps</th><th>Matches</th><th>Combo</th><th>Status</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.PlayerID)}</td><td>${esc(r.SessionID)}</td><td>${esc(r.Mode)}</td><td>${r.Level}</td><td>${r.PlayerScore}</td><td>${r.AIScore}</td><td>${r.ValidSwaps}</td><td>${r.Matches}</td><td>${esc(r.Combo)}</td><td>${esc(r.Status)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="actions"><button class="btn go" id="dCsv">📥 Export player_game_data.csv</button><button class="btn" id="dJson" style="background:linear-gradient(90deg,#17a99d,#3fbf79)">📄 Export player_game_data.json</button><button class="btn ghost" id="dClose">Close</button></div></div>`, () => {
+    $('#mx').onclick = $('#dClose').onclick = closeModal;
+    $('#dCsv').onclick = () => doExport('csv'); $('#dJson').onclick = () => doExport('json');
+  });
+}
+function doExport(fmt){
+  try{
+    const rows = allRows(); if(!rows.length) throw new Error('There is no gameplay data to export yet.');
+    const text = fmt === 'csv' ? toCSV(rows) : JSON.stringify({exportedAt:new Date().toISOString(), game:'Candy Match Saga', sessions:rows}, null, 2);
+    const file = 'player_game_data.' + fmt;
+    try{
+      const blob = new Blob([text], {type: fmt === 'csv' ? 'text/csv' : 'application/json'}); const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = file; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }catch(e){ /* downloads can be blocked in some viewers; the copy panel below always works */ }
+    openModal(`<div class="modal narrow" role="dialog" aria-label="Export data"><div class="mh"><h2>📤 ${file}</h2><button class="x" id="mx" aria-label="Close">✕</button></div>
+      <p style="margin:0 0 10px;color:var(--mute);font-size:.84rem">${rows.length} session row${rows.length > 1 ? 's' : ''}. If the browser did not save the file, copy the text and paste it into a ${fmt.toUpperCase()} file, then load it in Power BI with Get Data.</p>
+      <textarea class="out" id="xOut" readonly></textarea>
+      <div class="actions"><button class="btn go" id="xCopy">Copy to clipboard</button><button class="btn ghost" id="xClose">Close</button></div></div>`, () => {
+      $('#xOut').value = text; $('#mx').onclick = $('#xClose').onclick = closeModal;
+      $('#xCopy').onclick = async () => { try{ await navigator.clipboard.writeText(text); toast('Copied.'); }catch(e){ $('#xOut').select(); toast('Press Ctrl+C to copy the selected text.'); } };
+    });
+  }catch(e){ toast(e.message); }
+}
+$('#bBI').onclick = openDashboard; $('#bCsv').onclick = () => doExport('csv'); $('#bJson').onclick = () => doExport('json');
+
+/* =====================================================================
+   MODULE 1: SETUP, LEVEL SELECT, START / RESTART
+   ===================================================================== */
+function openLevels(){
+  const done = store.get('cleared', {});
+  openModal(`<div class="modal narrow" style="width:min(640px,100%)" role="dialog" aria-label="Select level"><div class="mh"><h2>📋 Select Level (1-20)</h2><button class="x" id="mx" aria-label="Close">✕</button></div>
+    <div class="lvgrid">${Array.from({length:20}, (_, i) => { const n = i + 1, c = levelCfg(n); return `<button class="lv ${n === pickedLevel ? 'on' : ''}" data-n="${n}"><span class="st">${done[n] ? '★'.repeat(done[n]) : '&nbsp;'}</span>Level ${n}<small>${c.target.toLocaleString()} pts<br>${c.moves} moves</small></button>`; }).join('')}</div></div>`, () => {
+    $('#mx').onclick = closeModal;
+    ov.querySelectorAll('.lv').forEach(b => b.onclick = () => { pickedLevel = +b.dataset.n; $('#lvBtn').textContent = `📋 SELECT LEVEL (1-20): LEVEL ${pickedLevel}`; closeModal(); });
+  });
+}
+$('#lvBtn').onclick = openLevels;
+$('#sndBtn').onclick = () => { sound = !sound; store.set('sound', sound); $('#sndBtn').textContent = sound ? '🔊 SOUND: ON' : '🔇 SOUND: OFF'; if(sound) tone(520, .1); };
+
+function startGame(name, mode, level){
+  try{
+    name = (name || '').trim().replace(/[<>]/g, '');
+    if(!name) name = 'Player1';
+    if(!Number.isInteger(level) || level < 1 || level > 20) level = 1;
+    if(S && !S.over && S.P.moves > 0 && S.status === 'IN_PROGRESS'){ S.status = 'ABANDONED'; persistSession(); }
+    S = newSession(name, mode, level); S.grid = genBoard();
+    $('#setup').hidden = true; $('#game').hidden = false; $('#log').innerHTML = '';
+    setBanner('👤 YOUR TURN'); setSub("Click '💡 Ask AI for Hint' for valid move assistance!");
+    addLog(mode === 'PLAYER_VS_AI' ? `🤖 Player vs AI. Level ${level}, target ${S.target.toLocaleString()}.` : `🎮 Level ${level}. Reach ${S.target.toLocaleString()} points in ${S.movesLeft} moves.`);
+    renderBoard({born:new Set(Array.from({length:64}, (_, i) => i))}); updateHUD(); renderBook(); persistSession();
+    window.scrollTo(0, 0);
+  }catch(e){ toast('Could not start the game: ' + e.message); }
+}
+$('#startBtn').onclick = () => {
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  startGame($('#pname').value, mode, pickedLevel);
+};
+$('#bRestart').onclick = () => { if(S) startGame(S.name, S.mode, S.level); };
+$('#bHome').onclick = () => {
+  if(S && !S.over && S.P.moves > 0 && S.status === 'IN_PROGRESS'){ S.status = 'ABANDONED'; persistSession(); }
+  $('#game').hidden = true; $('#setup').hidden = false; closeModal();
+};
+
+/* boot */
+sound = store.get('sound', true); $('#sndBtn').textContent = sound ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+rebuildRegistry();
+window.__cms = {get S(){ return S; }, startGame, planClear, findRuns, trySwap, allMoves, FORMULAS:() => FORMULAS, CANDY, genBoard, attemptSwap, aiMove, hasMoves};
+</script>
+
+</body></html>

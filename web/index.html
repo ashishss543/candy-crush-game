@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Candy Match Saga (Java Localhost)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ===================== SETUP ===================== -->
+<main id="setup">
+  <div class="setup-card">
+    <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
+      <path d="M12 26l14 10-4 16-12-6z" fill="#e8334a"/><path d="M68 54L54 44l4-16 12 6z" fill="#e8334a"/>
+      <circle cx="40" cy="40" r="22" fill="#ffc83d"/>
+      <path d="M22 30c10-4 26 4 36 0M20 40c12-4 28 6 40 0M22 50c10-4 24 4 36 0" stroke="#e8334a" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="33" cy="30" r="5" fill="#fff" opacity=".4"/>
+    </svg>
+    <h1>CANDY MATCH SAGA</h1>
+    <div class="tag">An Intelligent Rule-Based Candy Match Game with Player Analytics</div>
+    <label class="cap" for="pname">👤 Player Name:</label>
+    <input id="pname" type="text" maxlength="20" value="Player1" autocomplete="off">
+    <label class="cap">🎮 Select Game Mode:</label>
+    <label class="radio"><input type="radio" name="mode" value="PLAYER_ONLY" checked> 👤 Player Only (Normal Mode)</label>
+    <label class="radio"><input type="radio" name="mode" value="PLAYER_VS_AI"> 🤖 Player vs AI Opponent (Turn-Based &amp; Learning)</label>
+    <button class="btn go" id="startBtn">🎮 START PLAYING</button>
+    <button class="btn" id="lvBtn">📋 SELECT LEVEL (1-20)</button>
+    <button class="btn" id="sndBtn">🔊 SOUND: ON</button>
+    <details class="howto">
+      <summary>How to play</summary>
+      <ul>
+        <li>Drag a candy onto a neighbour, or click one candy then a neighbour, to swap them.</li>
+        <li>A swap is valid when it makes a match of 2 or more. Invalid swaps bounce back and cost no move.</li>
+        <li>Match 2 is a pair combo, Match 3 is standard, Match 4 makes a Striped Candy (clears a line), Match 5 makes a Color Bomb (swap it with any candy to wipe that colour).</li>
+        <li>Chain cascades to raise your combo multiplier, up to 5x.</li>
+        <li>Open <b>+ Candy Synthesis</b> to define formulas. Line up the ingredients next to each other to craft a new candy.</li>
+        <li>Open <b>+ Rule</b> to add bonus rules. The AI Worth Check accepts or rejects anything that would break the balance.</li>
+        <li>Reach the target score before the moves run out.</li>
+      </ul>
+    </details>
+  </div>
+</main>
+
+<!-- ===================== GAME ===================== -->
+<main id="game" hidden>
+  <div class="panel hud">
+    <div class="who">👤 <span id="hName">Player1</span></div>
+    <div class="stat"><small>Level</small><b id="hLevel">1</b></div>
+    <div class="stat score"><small>Player Score</small><b id="hScore">0</b></div>
+    <div class="stat"><small>Target</small><b id="hTarget">1300</b></div>
+    <div class="stat"><small>Moves</small><b id="hMoves">24</b></div>
+    <div class="stat"><small>Matches</small><b id="hMatches">0</b></div>
+    <div class="spacer"></div>
+    <button class="pill p1" id="bSynth">+ Candy Synthesis</button>
+    <button class="pill p2" id="bRule">➕ Rule</button>
+    <button class="pill p3" id="bBI">📊 Power BI</button>
+    <button class="pill p4" id="bCsv">📤 CSV</button>
+    <button class="pill p5" id="bJson">📄 JSON</button>
+    <button class="sq" id="bRestart" title="Restart level" aria-label="Restart level">🔄</button>
+    <button class="sq" id="bHome" title="Main menu" aria-label="Main menu">🏠</button>
+  </div>
+  <div id="banner">👤 YOUR TURN</div>
+  <div id="subbar">Click '💡 Ask AI for Hint' for valid move assistance!</div>
+
+  <div class="cols">
+    <!-- Research book -->
+    <aside class="panel side">
+      <h3>📖 Research Book 🔬</h3>
+      <input class="search" id="search" placeholder="🔍 Search candies &amp; rules..." aria-label="Search candies and rules">
+      <div class="tabs"><button class="tab on" id="tabC">Candies</button><button class="tab" id="tabK">Combinations</button></div>
+      <div class="book" id="book"></div>
+      <div class="eval" id="evalBox"><h5>Candy &amp; Rule AI Evaluator</h5><p>Click any candy above to run the AI Worth &amp; Accept/Reject Check!</p></div>
+      <button class="btn warn" id="bWorth" style="margin:0;font-size:.82rem">🔬 Run AI Worth Check (Accept / Reject)</button>
+    </aside>
+
+    <!-- Board -->
+    <section class="panel boardwrap" id="board-col"><div id="board" aria-label="Candy board"></div></section>
+
+    <!-- AI side -->
+    <aside class="panel side">
+      <h3>🤖 AI Opponent &amp; Scoreboard</h3>
+      <div class="two">
+        <div class="score p">👤 Player<b id="sP">0</b></div>
+        <div class="score a">🤖 AI Opponent<b id="sA">0</b></div>
+      </div>
+      <div id="log" aria-live="polite"></div>
+      <button class="btn go" id="bHint" style="margin:0">💡 Ask AI for Hint</button>
+      <h4>🧠 AI Learning &amp; Strategy Engine</h4>
+      <div class="kv">
+        <div><span>Learned Strategy:</span><b class="cy" id="aStrat">Observing Player...</b></div>
+        <div><span>Player Fav Candy Target:</span><b class="yl" id="aFav">None</b></div>
+        <div><span>AI Adaptation Level:</span><b class="lm" id="aLvl">Level 1 (0 Swaps Learned)</b></div>
+      </div>
+      <h4>🎯 Match Counter Breakdown</h4>
+      <div class="mc">
+        <div><span>Total Matches Made:</span><b class="yl" id="mT">0</b></div>
+        <div><span>Match 2 (Pair Combo):</span><b class="pk" id="m2">0</b></div>
+        <div><span>Match 3 (Standard):</span><b class="bl" id="m3">0</b></div>
+        <div><span>Match 4 (Striped Candy):</span><b class="pu" id="m4">0</b></div>
+        <div><span>Match 5 (Color Bomb):</span><b class="gr" id="m5">0</b></div>
+      </div>
+    </aside>
+  </div>
+  <div class="foot">☕ Powered by Java Localhost Engine • ⚡ Power BI Compatible CSV &amp; JSON Telemetry Ready</div>
+</main>
+
+<div id="ov" hidden></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
